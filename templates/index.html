@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import "partials/_sensor_card.html" as sensor_card %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="py-3">
+    <h1 class="text-center">Sensor Gallery</h1>
+</div>
+<div class="row">
+    {% for sensor in sensors %}
+        {{ sensor_card.render_sensor_card(sensor=sensor) }}
+    {% endfor %}
+</div>
+<div class="my-4 text-end">
+    <a href="{{ url_for('view.export_all') }}" class="btn btn-success">Export All Sensor Data</a>
+</div>
+{% endblock %}

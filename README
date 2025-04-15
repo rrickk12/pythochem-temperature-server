@@ -1,0 +1,249 @@
+## 📁 Project Structure: BLE Data Server
+
+### Root Directory Layout
+```bash
+ble-data-server/
+│
+├── listener/           # Handles incoming data from BLE gateway
+│   └── listener.py
+│
+├── db_ops/             # Handles all DB-related operations
+│   ├── models.py
+│   └── db_handler.py
+│
+├── scheduler/          # Handles scheduling, triggers, timed workflows
+│   └── scheduler.py
+│
+├── report/             # API endpoints, report structures,datainterface
+│   └── report_api.py
+│
+├── config/             # Configuration, secrets, templates
+│   └── settings.yaml
+│
+├── utils/              # Shared helper functions
+│   └── parser.py
+│
+├── tests/              # Unit tests per module
+│
+├── main.py             # Entry point
+└── requirements.txt    # Dependencies
+```
+
+---
+
+## 🧩 Module Specifications
+
+---
+
+### `listener/listener.py`
+
+- **@description**  
+    Listens for incoming POST requests from BLE gateways, parses the payload, and dispatches structured data to the internal workflow.
+    
+- **@parameters**
+    
+    - `POST /data` with sensor payload
+        
+    - JSON body with gateway data
+        
+- **@output**
+    
+    - Structured sensor data
+        
+    - Emits event or calls handler to store/process data
+        
+
+---
+
+### `db_ops/db_handler.py`
+
+- **@description**  
+    Abstracts all database operations (insert, query, update, delete). Central authority for data persistence.
+    
+- **@parameters**
+    
+    - `operation: str` – e.g. `"insert"`, `"query_by_mac"`, etc
+        
+    - `payload: dict` – content of operation
+        
+- **@output**
+    
+    - Success status
+        
+    - Query results, if applicable
+        
+
+---
+
+### `db_ops/models.py`
+
+- **@description**  
+    Defines database schema, table definitions, and data modeling (e.g. SQLAlchemy or Pydantic schemas).
+    
+- **@parameters**
+    
+    - None (used by `db_handler`)
+        
+- **@output**
+    
+    - Database models / ORM bindings
+        
+
+---
+
+### `scheduler/scheduler.py`
+
+- **@description**  
+    Manages scheduled events (e.g. timed backups, report generation). Can load/save schedule templates.
+    
+- **@parameters**
+    
+    - `schedule: dict` – timing, actions, targets
+        
+    - `event_hook: function` – to trigger workflows
+        
+- **@output**
+    
+    - Timed execution or state update
+        
+    - Callback triggering
+        
+
+---
+
+### `report/report_api.py`
+
+- **@description**  
+    API module that exposes endpoints for the visualizer/frontend, allowing report generation, querying sensor history, and configuring behaviours.
+    
+- **@parameters**
+    
+    - HTTP `GET/POST` endpoints
+        
+    - Query strings / JSON configs
+        
+- **@output**
+    
+    - JSON responses with data
+        
+    - PDF/CSV reports (optional)
+        
+
+---
+
+### `utils/parser.py`
+
+- **@description**  
+    Contains reusable functions to parse and normalize BLE payloads, format timestamps, convert units, etc.
+    
+- **@parameters**
+    
+    - `raw_payload: bytes | str`
+        
+- **@output**
+    
+    - Parsed, validated sensor data dict
+        
+
+---
+
+## 🛠 Suggested First Dev Sprint
+
+|Task|Module|Description|
+|---|---|---|
+|1. Create BLE POST listener|`listener/`|Accept incoming data, basic logging|
+|2. Define DB schema|`db_ops/models.py`|Sensor data model (timestamp, MAC, temp, etc)|
+|3. Create DB handler functions|`db_ops/db_handler.py`|Insert + basic select|
+|4. Parse payload|`utils/parser.py`|Basic BLE data decoding|
+|5. Connect listener → parser → DB|`main.py`|Basic data pipeline|
+|6. Setup config file|`config/settings.yaml`|Store port, DB path, etc|
+
+
+
+
+# Project Modules: Usage and API Documentation
+
+## Overview
+
+This project manages sensor data using a SQLAlchemy-based database. The code is organized into several parts:
+
+- **db_ops:** Contains database connection and ORM model definitions.
+- **blueprints:** Hosts Flask blueprints for endpoint definitions (listener, report, and view).
+- **modules:** Provides helper modules including a service layer, data reader, and report generator.
+- **scheduler:** Runs periodic tasks such as data compression and alert checking.
+
+## Project Structure
+
+project/ ├── db_ops/ │ ├── db_manager.py │ └── models.py ├── blueprints/ │ ├── listener.py │ ├── report.py │ └── view.py ├── modules/ │ ├── reader.py │ ├── report.py │ └── service.py ├── scheduler/ │ └── scheduler.py └── USAGE.md
+
+python
+Copy
+
+## Getting Started
+
+1. **Dependencies:**  
+   - Python 3  
+   - Flask  
+   - SQLAlchemy  
+   - (Other dependencies such as a payload parser in `utils`)
+
+2. **Running the Web App:**  
+   Integrate the blueprints (listener, report, view) into your Flask application:
+   ```python
+   from flask import Flask
+   from blueprints.listener import listener_bp
+   from blueprints.report import report_bp
+   from blueprints.view import view_bp
+
+   app = Flask(__name__)
+   app.register_blueprint(listener_bp)
+   app.register_blueprint(report_bp)
+   app.register_blueprint(view_bp)
+
+   if __name__ == '__main__':
+       app.run(debug=True)
+
+
+
+
+       # Project Modules: Usage and API Documentation
+
+## Overview
+
+This project manages sensor data using a SQLAlchemy-based database. The code is organized into several parts:
+
+- **db_ops:** Contains database connection and ORM model definitions.
+- **blueprints:** Hosts Flask blueprints for endpoint definitions (listener, report, and view).
+- **modules:** Provides helper modules including a service layer, data reader, and report generator.
+- **scheduler:** Runs periodic tasks such as data compression and alert checking.
+
+## Project Structure
+
+project/ ├── db_ops/ │ ├── db_manager.py │ └── models.py ├── blueprints/ │ ├── listener.py │ ├── report.py │ └── view.py ├── modules/ │ ├── reader.py │ ├── report.py │ └── service.py ├── scheduler/ │ └── scheduler.py └── USAGE.md
+
+python
+Copy
+
+## Getting Started
+
+1. **Dependencies:**  
+   - Python 3  
+   - Flask  
+   - SQLAlchemy  
+   - (Other dependencies such as a payload parser in `utils`)
+
+2. **Running the Web App:**  
+   Integrate the blueprints (listener, report, view) into your Flask application:
+   ```python
+   from flask import Flask
+   from blueprints.listener import listener_bp
+   from blueprints.report import report_bp
+   from blueprints.view import view_bp
+
+   app = Flask(__name__)
+   app.register_blueprint(listener_bp)
+   app.register_blueprint(report_bp)
+   app.register_blueprint(view_bp)
+
+   if __name__ == '__main__':
+       app.run(debug=True)

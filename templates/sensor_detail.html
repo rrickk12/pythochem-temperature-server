@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Sensor Details{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8 offset-md-2">
+    <h1 class="my-4 text-center">Sensor Details</h1>
+    <div class="card mb-4 shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">
+          <span class="editable" data-mac="{{ sensor.mac }}">
+            {{ sensor.name or "Unnamed Sensor" }}
+          </span>
+        </h5>
+        <h6 class="card-subtitle mb-2 text-muted">{{ sensor.mac }}</h6>
+        <p class="card-text">
+          <strong>Last Reading:</strong> {{ sensor.last_read or "N/A" }}
+        </p>
+        <div class="text-center mb-3">
+          <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Dashboard</a>
+          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#viewDataModal">
+            View Cleaned Data
+          </button>
+        </div>
+        <h4 class="mb-3 text-center">Historical Data</h4>
+        <canvas id="sensorChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+    <div class="text-center mb-4">
+      <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#alarmModal">
+        Set Alarm Thresholds
+      </button>
+      <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#scheduleModal">
+        Edit Schedule Policy
+      </button>
+    </div>
+    <h2 class="mb-4 text-center">Update Sensor Settings</h2>
+    <form id="sensor-settings-form" method="POST" action="{{ url_for('view.update_sensor', mac=sensor.mac) }}">
+      <div class="mb-3">
+        <label for="sensorName" class="form-label">Sensor Name</label>
+        <input type="text" class="form-control" id="sensorName" name="name" value="{{ sensor.name }}">
+      </div>
+      <div class="mb-3">
+        <label for="sensorLocation" class="form-label">Sensor Location</label>
+        <input type="text" class="form-control" id="sensorLocation" name="location" value="{{ sensor.location }}">
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+    {% include "partials/_modals.html" %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Make the sensor readings available to JavaScript.
+  window.sensorReadings = {{ readings_json|safe }};
+  </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+{% endblock %}

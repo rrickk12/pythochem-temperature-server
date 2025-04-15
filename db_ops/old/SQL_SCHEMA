@@ -1,0 +1,74 @@
+CREATE TABLE Sensors (
+    mac TEXT PRIMARY KEY,
+    name TEXT,
+    location TEXT,
+    last_read TEXT,
+    is_active BOOLEAN DEFAULT 1
+);
+
+CREATE TABLE AlertPolicies (
+    mac TEXT PRIMARY KEY,
+    temp_max REAL,
+    temp_min REAL,
+    humidity_max REAL,
+    humidity_min REAL,
+    FOREIGN KEY (mac) REFERENCES Sensors(mac)
+);
+
+CREATE TABLE SchedulePolicies (
+    mac TEXT PRIMARY KEY,
+    delta_time INTEGER,
+    last_update TEXT,
+    FOREIGN KEY (mac) REFERENCES Sensors(mac)
+);
+
+CREATE TABLE Warnings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT,
+    mac TEXT,
+    type TEXT,
+    message TEXT,
+    read BOOLEAN DEFAULT 0,
+    posted BOOLEAN DEFAULT 0,
+    FOREIGN KEY (mac) REFERENCES Sensors(mac)
+);
+
+CREATE TABLE ReadsRaw (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TEXT,
+    mac TEXT,
+    temperature REAL,
+    humidity REAL,
+    rssi INTEGER,
+    type TEXT,
+    flags TEXT,
+    FOREIGN KEY (mac) REFERENCES Sensors(mac)
+);
+
+CREATE TABLE ReadsClean (
+    timestamp TEXT,
+    mac TEXT,
+    avg_temp REAL,
+    avg_hum REAL,
+    min_temp REAL,
+    max_temp REAL,
+    min_hum REAL,
+    max_hum REAL,
+    flags TEXT,
+    PRIMARY KEY (timestamp, mac),
+    FOREIGN KEY (mac) REFERENCES Sensors(mac)
+);
+
+CREATE TABLE ReadsScheduled (
+    timestamp TEXT,
+    mac TEXT,
+    avg_temp REAL,
+    avg_hum REAL,
+    min_temp REAL,
+    max_temp REAL,
+    min_hum REAL,
+    max_hum REAL,
+    flags TEXT,
+    PRIMARY KEY (timestamp, mac),
+    FOREIGN KEY (mac) REFERENCES Sensors(mac)
+);

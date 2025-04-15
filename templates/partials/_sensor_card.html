@@ -1,0 +1,29 @@
+{% macro render_sensor_card(sensor, reading=None) %}
+<div class="col-md-4 col-sm-6 mb-4">
+    <div class="card sensor-card h-100">
+        <div class="card-body">
+            <h5 class="card-title">
+                <span class="editable" data-mac="{{ sensor.mac }}">
+                    {{ sensor.name or "Unnamed Sensor" }}
+                </span>
+            </h5>
+            <h6 class="card-subtitle mb-2 text-muted">{{ sensor.mac }}</h6>
+            <p class="card-text">
+                <strong>Last Reading:</strong> {{ sensor.last_read or "N/A" }}
+                {% if reading %}
+                  <br>
+                  <strong>Temp:</strong> {{ reading.temperature or reading.avg_temp }} °C,
+                  <strong>Humidity:</strong> {{ reading.humidity or reading.avg_hum }} %
+                {% endif %}
+            </p>
+        </div>
+        <div class="card-footer bg-transparent border-top-0">
+            <div class="btn-group w-100" role="group">
+                <button class="btn btn-primary btn-sm export-sensor" data-mac="{{ sensor.mac }}">Export</button>
+                <button class="btn btn-secondary btn-sm edit-alarm" data-mac="{{ sensor.mac }}">Alarm</button>
+                <button class="btn btn-secondary btn-sm edit-schedule" data-mac="{{ sensor.mac }}">Schedule</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
