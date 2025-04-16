@@ -1,29 +1,32 @@
-{% macro render_sensor_card(sensor, reading=None) %}
+{% macro render_sensor_card(sensor, chart_data=None) %}
 <div class="col-md-4 col-sm-6 mb-4">
-    <div class="card sensor-card h-100">
-        <div class="card-body">
-            <h5 class="card-title">
-                <span class="editable" data-mac="{{ sensor.mac }}">
-                    {{ sensor.name or "Unnamed Sensor" }}
-                </span>
-            </h5>
-            <h6 class="card-subtitle mb-2 text-muted">{{ sensor.mac }}</h6>
-            <p class="card-text">
-                <strong>Last Reading:</strong> {{ sensor.last_read or "N/A" }}
-                {% if reading %}
-                  <br>
-                  <strong>Temp:</strong> {{ reading.temperature or reading.avg_temp }} °C,
-                  <strong>Humidity:</strong> {{ reading.humidity or reading.avg_hum }} %
-                {% endif %}
-            </p>
-        </div>
-        <div class="card-footer bg-transparent border-top-0">
-            <div class="btn-group w-100" role="group">
-                <button class="btn btn-primary btn-sm export-sensor" data-mac="{{ sensor.mac }}">Export</button>
-                <button class="btn btn-secondary btn-sm edit-alarm" data-mac="{{ sensor.mac }}">Alarm</button>
-                <button class="btn btn-secondary btn-sm edit-schedule" data-mac="{{ sensor.mac }}">Schedule</button>
-            </div>
-        </div>
+  <div class="card sensor-card h-100">
+    <div class="card-body">
+      <h5 class="card-title">
+        <span class="editable" data-mac="{{ sensor.mac }}">{{ sensor.name or "Unnamed Sensor" }}</span>
+      </h5>
+      <h6 class="card-subtitle mb-2 text-muted">{{ sensor.mac }}</h6>
+      <p class="card-text"><strong>Last Reading:</strong> {{ sensor.last_read or "N/A" }}</p>
+
+      {% if chart_data %}
+      {% set temps = chart_data | map(attribute='avg_temp') | select('defined') | list %}
+      {% set hums = chart_data | map(attribute='avg_hum') | select('defined') | list %}
+      <div class="mb-2 small">
+        <strong>Avg Temp:</strong> {{ temps|sum / temps|length if temps else "–" }} °C |
+        <strong>Avg Hum:</strong> {{ hums|sum / hums|length if hums else "–" }} %
+      </div>
+      <div class="mini-chart-container" style="height:100px;">
+        <canvas id="chart-{{ sensor.mac }}"></canvas>
+      </div>
+      {% endif %}
     </div>
+    <div class="card-footer bg-transparent border-top-0">
+      <div class="btn-group w-100" role="group">
+        <button class="btn btn-primary btn-sm export-sensor" data-mac="{{ sensor.mac }}">Export</button>
+        <button class="btn btn-secondary btn-sm edit-alarm" data-mac="{{ sensor.mac }}">Alarm</button>
+        <button class="btn btn-secondary btn-sm edit-schedule" data-mac="{{ sensor.mac }}">Schedule</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endmacro %}

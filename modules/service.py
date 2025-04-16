@@ -6,7 +6,7 @@ from modules.reader import DataReader
 from modules.report import ReportGenerator
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class SensorService:
     """

@@ -7,7 +7,7 @@ from modules.reader import DataReader
 from modules.report import ReportGenerator
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 report_bp = Blueprint('report', __name__, url_prefix='/report')
 

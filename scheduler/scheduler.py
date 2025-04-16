@@ -9,7 +9,7 @@ from db_ops.db_manager import DatabaseManager
 from db_ops.models import ReadRaw
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class SchedulerManager:
     """

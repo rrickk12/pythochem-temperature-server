@@ -6,13 +6,16 @@ from blueprints.listener import listener_bp
 from blueprints.report import report_bp       # Report API endpoints
 from blueprints.view import view_bp            # Dashboard/management endpoints
 from modules.service import sensor_service
+from db_ops.db_manager import DatabaseManager
+from scheduler.scheduler import SchedulerManager
 
 # Set up application-wide logging.
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
 )
 logger = logging.getLogger(__name__)
+scheduler = SchedulerManager(DatabaseManager(), check_interval=60)
 
 def create_app():
     """
@@ -25,16 +28,31 @@ def create_app():
     app.register_blueprint(listener_bp, url_prefix='/api')
     app.register_blueprint(report_bp, url_prefix='/report')
     app.register_blueprint(view_bp, url_prefix='/view')
+    scheduler.start()  
 
     @app.route("/")
     def index():
-        """
-        Renders the dashboard homepage.
-        This page displays the list of sensors currently in the system.
-        """
         logger.info("Rendering dashboard page.")
         sensors = sensor_service.get_all_sensors()
-        return render_template("index.html", sensors=sensors)
+        db_manager = DatabaseManager()
+        sensor_cards_data = []
+
+        for sensor in sensors:
+            # Try to fetch clean readings; if not available, fallback to raw readings.
+            readings = db_manager.get_latest_clean_reads(sensor.mac, limit=10)
+            if not readings:
+                readings = db_manager.get_latest_raw_reads(sensor.mac, limit=10)
+            # Format readings for chart display (e.g. only include timestamp and temperature).
+            chart_data = [{
+                'timestamp': r.timestamp,
+                'temperature': r.avg_temp if hasattr(r, 'avg_temp') and r.avg_temp is not None else r.temperature
+            } for r in readings]
+            sensor_cards_data.append({
+                'sensor': sensor,
+                'chart_data': chart_data
+            })
+        # Pass sensor_cards_data to the template.
+        return render_template("index.html", sensor_cards_data=sensor_cards_data)
 
     @app.route("/sensor/<mac>")
     def sensor_detail(mac):

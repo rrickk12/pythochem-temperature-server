@@ -4,7 +4,7 @@ import logging
 from db_ops.db_manager import DatabaseManager
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class DataReader:
     """

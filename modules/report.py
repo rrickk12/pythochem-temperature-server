@@ -4,7 +4,7 @@ import logging
 from modules.reader import DataReader
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class ReportGenerator:
     """

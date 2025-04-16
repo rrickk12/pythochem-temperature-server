@@ -4,10 +4,11 @@ import logging
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, scoped_session
 from db_ops.models import Base, Sensor, AlertPolicy, SchedulePolicy, Warning, ReadRaw, ReadClean, ReadScheduled
+import datetime
 
 # Configure module-level logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 class DatabaseManager:
     """
@@ -229,6 +230,10 @@ class DatabaseManager:
         The minute_start timestamp should be formatted as "YYYY-MM-DDTHH:MM".
         """
         with self.Session() as session:
+            exists = session.query(ReadClean).filter_by(mac=mac, timestamp=minute_start).first()
+            if exists:
+                logger.debug("Already compressed for %s at %s", mac, minute_start)
+                return
             aggregates = session.query(
                 func.avg(ReadRaw.temperature).label("avg_temp"),
                 func.avg(ReadRaw.humidity).label("avg_hum"),
@@ -288,3 +293,12 @@ class DatabaseManager:
                 session.commit()
                 logger.debug("Compressed schedule reads for sensor %s from %s to %s: %s",
                              mac, start_timestamp, end_timestamp, scheduled_read)
+
+
+def backfill_clean_reads():
+    db = DatabaseManager()
+    sensors = db.get_all_sensors()
+    for sensor in sensors:
+        for minute in range(60 * 24):  # 24h back
+            ts = (datetime.datetime.utcnow() - datetime.timedelta(minutes=minute)).replace(second=0, microsecond=0)
+            db.compress_minute_reads(sensor.mac, ts.isoformat())

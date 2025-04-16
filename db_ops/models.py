@@ -13,10 +13,16 @@ class Sensor(Base):
     last_read = Column(String)
     is_active = Column(Boolean, default=True)
     
+    # One-to-one relationships.
     alert_policy = relationship("AlertPolicy", back_populates="sensor", uselist=False)
     schedule_policy = relationship("SchedulePolicy", back_populates="sensor", uselist=False)
-    warnings = relationship("Warning", back_populates="sensor")
-    raw_reads = relationship("ReadRaw", back_populates="sensor")
+    # One-to-many relationships; cascades may be added as needed.
+    warnings = relationship("Warning", back_populates="sensor", cascade="all, delete-orphan")
+    raw_reads = relationship("ReadRaw", back_populates="sensor", cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f"<Sensor(mac={self.mac!r}, name={self.name!r}, last_read={self.last_read!r})>"
+
 
 class AlertPolicy(Base):
     __tablename__ = "alert_policies"
@@ -28,6 +34,12 @@ class AlertPolicy(Base):
     
     sensor = relationship("Sensor", back_populates="alert_policy")
 
+    def __repr__(self):
+        return (f"<AlertPolicy(mac={self.mac!r}, temp_min={self.temp_min!r}, "
+                f"temp_max={self.temp_max!r}, humidity_min={self.humidity_min!r}, "
+                f"humidity_max={self.humidity_max!r})>")
+
+
 class SchedulePolicy(Base):
     __tablename__ = "schedule_policies"
     mac = Column(String, ForeignKey("sensors.mac"), primary_key=True)
@@ -35,6 +47,10 @@ class SchedulePolicy(Base):
     last_update = Column(String)
     
     sensor = relationship("Sensor", back_populates="schedule_policy")
+
+    def __repr__(self):
+        return f"<SchedulePolicy(mac={self.mac!r}, delta_time={self.delta_time}, last_update={self.last_update!r})>"
+
 
 class Warning(Base):
     __tablename__ = "warnings"
@@ -47,6 +63,10 @@ class Warning(Base):
     posted = Column(Boolean, default=False)
     
     sensor = relationship("Sensor", back_populates="warnings")
+
+    def __repr__(self):
+        return f"<Warning(id={self.id}, mac={self.mac!r}, type={self.type!r}, timestamp={self.timestamp!r})>"
+
 
 class ReadRaw(Base):
     __tablename__ = "reads_raw"
@@ -61,6 +81,11 @@ class ReadRaw(Base):
     
     sensor = relationship("Sensor", back_populates="raw_reads")
 
+    def __repr__(self):
+        return (f"<ReadRaw(id={self.id}, mac={self.mac!r}, timestamp={self.timestamp!r}, "
+                f"temperature={self.temperature}, humidity={self.humidity})>")
+
+
 class ReadClean(Base):
     __tablename__ = "reads_clean"
     timestamp = Column(String, primary_key=True)
@@ -73,6 +98,11 @@ class ReadClean(Base):
     max_hum = Column(Float)
     flags = Column(Text)
 
+    def __repr__(self):
+        return (f"<ReadClean(timestamp={self.timestamp!r}, mac={self.mac!r}, "
+                f"avg_temp={self.avg_temp}, avg_hum={self.avg_hum})>")
+
+
 class ReadScheduled(Base):
     __tablename__ = "reads_scheduled"
     timestamp = Column(String, primary_key=True)
@@ -84,3 +114,7 @@ class ReadScheduled(Base):
     min_hum = Column(Float)
     max_hum = Column(Float)
     flags = Column(Text)
+
+    def __repr__(self):
+        return (f"<ReadScheduled(timestamp={self.timestamp!r}, mac={self.mac!r}, "
+                f"avg_temp={self.avg_temp}, avg_hum={self.avg_hum})>")

@@ -1,6 +1,6 @@
-// static/js/chart.js
+"use strict";
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('sensorChart');
     if (!canvas) {
         console.warn("No sensorChart canvas found.");
@@ -8,21 +8,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     const ctx = canvas.getContext('2d');
 
-    // Retrieve sensor readings passed from the backend.
-    // This can be a global variable (e.g., passed via a template) or set in the HTML.
+    // Ensure that sensor readings are provided.
     const readings = window.sensorReadings || [];
+    if (!readings.length) {
+        console.warn("No sensor readings available to render chart.");
+        return;
+    }
 
-    // Sort readings by timestamp to ensure the chart displays chronologically.
+    // Sort readings chronologically.
     readings.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
     const labels = readings.map(r => r.timestamp);
-    // Use the average temperature if available, otherwise fallback to raw.
-    const temperatureData = readings.map(r => r.avg_temp || r.temperature);
-    // Use the average humidity if available, otherwise fallback to raw.
-    const humidityData = readings.map(r => r.avg_hum || r.humidity);
+    const temperatureData = readings.map(r => r.avg_temp ?? r.temperature);
+    const humidityData = readings.map(r => r.avg_hum ?? r.humidity);
 
-    // Render the chart using Chart.js.
-    const sensorChart = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,

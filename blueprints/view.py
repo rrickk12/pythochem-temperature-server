@@ -5,7 +5,7 @@ from flask import Blueprint, request, jsonify
 from modules.service import sensor_service
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 view_bp = Blueprint('view', __name__, url_prefix='/view')
 

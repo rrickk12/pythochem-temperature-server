@@ -7,7 +7,7 @@ from utils.validators import validate_sensor_payload
 from db_ops.db_manager import DatabaseManager
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 listener_bp = Blueprint('listener', __name__)
 
