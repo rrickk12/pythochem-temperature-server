@@ -1,0 +1,22 @@
+{% macro render_scheduler(mac, schedule={}) %}
+<div class="mt-2">
+  <form class="scheduler-form row gx-2 gy-1 align-items-center" data-mac="{{ mac }}">
+    <div class="col-auto">
+      <span class="small text-muted">Intervalo (h):</span>
+    </div>
+    <div class="col-auto">
+      <input type="number" step="any" name="delta_time" class="form-control form-control-sm"
+             style="width: 5em"
+             value="{{ schedule.delta_time or '' }}" placeholder="ex: 4">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-outline-primary btn-sm">Salvar</button>
+    </div>
+    {% if schedule.next_run %}
+    <div class="col-12 small text-muted mt-1">
+      <span>Próxima leitura: {{ schedule.next_run }}</span>
+    </div>
+    {% endif %}
+  </form>
+</div>
+{% endmacro %}

@@ -1,91 +1,157 @@
-/* Global Base Styles */
+:root {
+  --primary:        #007bff;
+  --primary-hover:  #0056b3;
+  --danger:         #dc3545;
+  --success:        #28a745;
+  --warning:        #ffc107;
+  --info:           #17a2b8;
+  --bg-light:       #f8f9fa;
+  --text-dark:      #343a40;
+  --card-border:    #dee2e6;
+  --card-shadow:    0 2px 8px rgba(0,0,0,0.09);
+}
+
 body {
-    padding-top: 70px;  /* accommodate fixed navbar */
-    background-color: #f8f9fa;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #343a40;
+  margin: 0;
+  padding-top: 70px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-light);
+  color: var(--text-dark);
 }
 
-h1, h2, h4, h5, h6 {
-    color: #343a40;
+main.container {
+  max-width: 1200px;
+  background: none;
 }
 
-/* Navbar Styles */
-.navbar-brand, .nav-link {
-    color: #007bff !important;
-}
-.navbar-nav .nav-link:hover {
-    color: #0056b3 !important;
-}
-
-/* Container */
-.container {
-    margin-top: 2rem;
-}
-
-/* Sensor Card Styles */
 .sensor-card {
-    border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
-    background-color: #ffffff;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.sensor-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-.card-body {
-    padding: 1rem;
-}
-.card-footer {
-    padding: 0.5rem 1rem;
-    background: transparent;
-    border-top: none;
+  border: 1px solid var(--card-border);
+  border-radius: .75rem;
+  background: #fff;
+  box-shadow: var(--card-shadow);
+  transition: transform .18s, box-shadow .18s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0;
 }
 
-/* Editable Sensor Name */
+.sensor-card:hover {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 8px 28px 0 rgba(0,0,0,0.10);
+}
+
+.sensor-card .card-body {
+  flex: 1 1 auto;
+  padding: 1rem 1.1rem 0.5rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sensor-card .card-footer {
+  background: transparent;
+  border: none;
+  padding: .5rem 1.1rem .5rem 1.1rem;
+}
+
+/* Linha compacta para header */
+.sensor-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin-bottom: 0.25rem;
+}
+.sensor-mac {
+  color: #888;
+  font-size: 0.92em;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+.sensor-last-read {
+  color: #b0b0b0;
+  font-size: 0.8em;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Stats Grid */
+.sensor-stats-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.97em;
+  margin-bottom: 0.2rem;
+  gap: 1rem;
+}
+.sensor-stats-row strong {
+  font-weight: 500;
+  margin-right: .3em;
+}
+
+/* Mini chart */
+.mini-chart-container {
+  height: 92px;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  margin-top: 0.3rem;
+  position: relative;
+  background: #f8f9fa;
+  border-radius: .55rem;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03);
+}
+.mini-chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* Alarm inline form */
+.alarm-form .form-control-sm {
+  font-size: .93rem;
+  padding: .2rem .4rem;
+}
+.form-feedback {
+  min-height: 1.3em;
+  font-size: .85em;
+}
+
+/* Botões */
+.btn { 
+  font-size: .93rem; 
+  padding: .38rem .8rem; 
+  border-radius: .28rem; 
+  font-weight: 500;
+  max-width: 180px;
+}
+.btn-primary { background: var(--primary); border-color: var(--primary);}
+.btn-primary:hover, .btn-primary:focus { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+/* Responsive */
+@media (max-width: 991.98px) {
+  main.container { max-width: 98vw; }
+}
+@media (max-width: 575.98px) {
+  .sensor-card { margin-bottom: 1.2rem; }
+  .card-footer .btn-group .btn { font-size: .92rem; }
+}
+
+.col {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  margin-right: 0.1rem;
+  margin-left: 0.1rem;
+  padding-left: 0rem;
+  padding-right: 0rem;
+}
+
+/* Editable field styling */
 .editable {
-    cursor: pointer;
-    border-bottom: 1px dotted #6c757d;
-    transition: color 0.2s;
+  cursor: pointer;
+  border-bottom: 1px dotted #0d6efd2a;
+  transition: color 0.2s;
 }
 .editable:hover {
-    color: #007bff;
-}
-
-/* Button Group */
-.btn-group .btn {
-    font-size: 0.85rem;
-    padding: 0.375rem 0.75rem;
-}
-
-/* Modal Form Inputs */
-.modal .form-control {
-    margin-bottom: 1rem;
-}
-
-/* Footer Styles */
-.footer {
-    background-color: #e9ecef;
-    padding: 1rem 0;
-}
-
-/* Responsive Card Grid */
-@media (max-width: 768px) {
-    .col-sm-6 {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-}
-@media (min-width: 769px) and (max-width: 992px) {
-    .col-md-4 {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
-}
-@media (min-width: 993px) {
-    .col-md-4 {
-        flex: 0 0 33.33%;
-        max-width: 33.33%;
-    }
+  color: #0d6efd;
+  background: #e7f1ff;
 }

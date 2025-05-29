@@ -1,27 +1,86 @@
-<!-- templates/base.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}Sensor Dashboard{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
   {% block head %}{% endblock %}
 </head>
-<body>
-  {% include 'partials/_header.html' %}
-  <main class="container mt-5 pt-4">
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="exportForm">
+        <div class="modal-header">
+          <h5 class="modal-title">Exportar Dados</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="export-mac" name="mac">
+          <div class="mb-2">
+            <label>De: <input type="date" id="export-from" class="form-control" name="from"></label>
+          </div>
+          <div class="mb-2">
+            <label>Até: <input type="date" id="export-to" class="form-control" name="to"></label>
+          </div>
+          <div class="mb-2">
+            <label>Intervalo (h): <input type="number" id="export-interval" class="form-control" name="interval" min="1" value="4"></label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Exportar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="exportAllModal" tabindex="-1" aria-labelledby="exportAllModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="exportAllForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exportAllModalLabel">Exportar Todos os Sensores</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2">
+            <label for="export-all-from" class="form-label">Data início</label>
+            <input type="datetime-local" class="form-control" id="export-all-from" required>
+          </div>
+          <div class="mb-2">
+            <label for="export-all-to" class="form-label">Data fim</label>
+            <input type="datetime-local" class="form-control" id="export-all-to" required>
+          </div>
+          <div class="mb-2">
+            <label for="export-all-interval" class="form-label">Intervalo (horas)</label>
+            <input type="number" min="1" class="form-control" id="export-all-interval" value="2" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-success">Exportar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<body >
+
+  {% include 'partials/_navbar.html' %}
+
+  <main class="container flex-fill mt-4 pt-4">
     {% block content %}{% endblock %}
   </main>
+
   {% include 'partials/_footer.html' %}
 
-  <!-- Base JS -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/sensor.js') }}"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

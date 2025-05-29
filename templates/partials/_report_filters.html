@@ -1,0 +1,15 @@
+{% macro render_filters(start_timestamp='', end_timestamp='') %}
+<form method="GET" action="{{ url_for('report.get_sensor_report') }}" class="row g-3 justify-content-center align-items-end">
+  <div class="col-md-3">
+    <label class="form-label" for="start-date">Data Início</label>
+    <input type="date" id="start-date" name="start_timestamp" class="form-control" value="{{ start_timestamp }}" autocomplete="off">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label" for="end-date">Data Fim</label>
+    <input type="date" id="end-date" name="end_timestamp" class="form-control" value="{{ end_timestamp }}" autocomplete="off">
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-primary w-100" type="submit">Exportar Relatório</button>
+  </div>
+</form>
+{% endmacro %}

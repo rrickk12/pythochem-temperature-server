@@ -127,7 +127,20 @@ class DatabaseManager:
                            .all())
             logger.debug("Retrieved latest %s clean reads for sensor %s: %s", limit, mac, reads)
             return reads
-    
+
+    def get_scheduled_reads(self, mac, start, end):
+        """
+        Recupera leituras agregadas (ReadScheduled) para o sensor entre start e end (ISO 8601).
+        """
+        with self.Session() as session:
+            reads = (session.query(ReadScheduled)
+                            .filter_by(mac=mac)
+                            .filter(ReadScheduled.timestamp >= start)
+                            .filter(ReadScheduled.timestamp <= end)
+                            .order_by(ReadScheduled.timestamp.asc())
+                            .all())
+            return reads
+
     # -------------------------------
     # Warning Methods
     # -------------------------------
@@ -157,22 +170,24 @@ class DatabaseManager:
     # Alert Policy Methods
     # -------------------------------
     def set_alert_policy(self, mac, temp_min=None, temp_max=None, humidity_min=None, humidity_max=None):
-        """
-        Sets or updates the alert policy thresholds for a sensor.
-        """
         with self.Session() as session:
             policy = session.get(AlertPolicy, mac)
             if not policy:
                 policy = AlertPolicy(mac=mac)
                 session.add(policy)
                 logger.debug("Created alert policy for sensor %s", mac)
-            policy.temp_min = temp_min
-            policy.temp_max = temp_max
-            policy.humidity_min = humidity_min
-            policy.humidity_max = humidity_max
+            # Só atualiza se valor não é None (mantém os existentes caso não envie)
+            if temp_min is not None:
+                policy.temp_min = temp_min
+            if temp_max is not None:
+                policy.temp_max = temp_max
+            if humidity_min is not None:
+                policy.humidity_min = humidity_min
+            if humidity_max is not None:
+                policy.humidity_max = humidity_max
             session.commit()
             logger.debug("Set alert policy for sensor %s: %s", mac, policy)
-    
+
     def get_alert_policy(self, mac):
         """
         Retrieves the alert policy for a sensor.
@@ -225,26 +240,32 @@ class DatabaseManager:
     # Readings Compression Methods
     # -------------------------------
     def compress_minute_reads(self, mac, minute_start):
-        """
-        Aggregates all raw readings for a sensor within a specific minute into a single clean reading.
-        The minute_start timestamp should be formatted as "YYYY-MM-DDTHH:MM".
-        """
         with self.Session() as session:
             exists = session.query(ReadClean).filter_by(mac=mac, timestamp=minute_start).first()
             if exists:
                 logger.debug("Already compressed for %s at %s", mac, minute_start)
                 return
-            aggregates = session.query(
+
+            # Pega todas as leituras daquele minuto, qualquer segundo/milissegundo/fuso
+            prefix = minute_start  # '2025-05-29T16:42'
+            rows = session.query(ReadRaw).filter(
+                ReadRaw.mac == mac,
+                ReadRaw.timestamp.like(f"{prefix}%")
+            )
+            count_raw = rows.count()
+            if count_raw == 0:
+                logger.debug("No RAWs for %s at %s", mac, minute_start)
+                return
+
+            aggregates = rows.with_entities(
                 func.avg(ReadRaw.temperature).label("avg_temp"),
                 func.avg(ReadRaw.humidity).label("avg_hum"),
                 func.min(ReadRaw.temperature).label("min_temp"),
                 func.max(ReadRaw.temperature).label("max_temp"),
                 func.min(ReadRaw.humidity).label("min_hum"),
                 func.max(ReadRaw.humidity).label("max_hum")
-            ).filter(
-                ReadRaw.mac == mac,
-                ReadRaw.timestamp.between(f"{minute_start}:00", f"{minute_start}:59")
             ).first()
+
             if aggregates and aggregates.avg_temp is not None:
                 clean_read = ReadClean(
                     timestamp=minute_start,
@@ -259,7 +280,8 @@ class DatabaseManager:
                 )
                 session.add(clean_read)
                 session.commit()
-                logger.debug("Compressed minute reads for sensor %s at %s: %s", mac, minute_start, clean_read)
+                logger.info("Compressed minute reads for sensor %s at %s (%d RAWs)", mac, minute_start, count_raw)
+
     
     def compress_schedule_reads(self, mac, start_timestamp, end_timestamp):
         """
@@ -294,11 +316,61 @@ class DatabaseManager:
                 logger.debug("Compressed schedule reads for sensor %s from %s to %s: %s",
                              mac, start_timestamp, end_timestamp, scheduled_read)
 
+    def rename_sensor(self, mac, name):
+        """
+        Renames the sensor with the given MAC address.
+        """
+        with self.Session() as session:
+            sensor = session.get(Sensor, mac)
+            if sensor:
+                sensor.name = name
+                session.commit()
+                logger.debug("Renamed sensor %s to '%s'", mac, name)
+                return True
+            else:
+                logger.warning("Sensor %s not found for renaming.", mac)
+                return False
 
-def backfill_clean_reads():
+
+def backfill_clean_reads(minutes=60*24):
     db = DatabaseManager()
     sensors = db.get_all_sensors()
     for sensor in sensors:
-        for minute in range(60 * 24):  # 24h back
+        print(f"Backfill {minutes} minutos para {sensor.mac}")
+        count = 0
+        for minute in range(minutes):
             ts = (datetime.datetime.utcnow() - datetime.timedelta(minutes=minute)).replace(second=0, microsecond=0)
+            before = db.get_latest_clean_reads(sensor.mac, 1)
             db.compress_minute_reads(sensor.mac, ts.isoformat())
+            after = db.get_latest_clean_reads(sensor.mac, 1)
+            if len(after) > len(before):
+                count += 1
+        print(f"Sensor {sensor.mac}: {count} novos minutos agregados.")
+
+def backfill_clean_reads_all():
+    from db_ops.db_manager import DatabaseManager
+    import datetime
+
+    db = DatabaseManager()
+    sensors = db.get_all_sensors()
+    for sensor in sensors:
+        print(f"Backfilling for sensor: {sensor.mac}")
+        with db.Session() as session:
+            min_ts = session.query(func.min(ReadRaw.timestamp)).filter(ReadRaw.mac == sensor.mac).scalar()
+            max_ts = session.query(func.max(ReadRaw.timestamp)).filter(ReadRaw.mac == sensor.mac).scalar()
+        if not min_ts or not max_ts:
+            print(f"Nenhum dado RAW para {sensor.mac}. Pulando.")
+            continue
+        min_dt = datetime.datetime.fromisoformat(str(min_ts)[:16])  # até minutos
+        max_dt = datetime.datetime.fromisoformat(str(max_ts)[:16])
+        total_minutes = int((max_dt - min_dt).total_seconds() // 60)
+        print(f"Sensor {sensor.mac}: {total_minutes} minutos de {min_dt} até {max_dt}")
+        count = 0
+        for m in range(total_minutes+1):
+            ts = (min_dt + datetime.timedelta(minutes=m)).replace(second=0, microsecond=0)
+            minute_str = ts.isoformat(timespec='minutes')
+            db.compress_minute_reads(sensor.mac, minute_str)
+            count += 1
+            if count % 200 == 0:
+                print(f"  {count} minutos processados...")
+        print(f"Sensor {sensor.mac}: backfill concluído ({count} minutos).")

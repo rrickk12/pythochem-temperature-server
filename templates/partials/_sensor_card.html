@@ -1,32 +1,67 @@
-{% macro render_sensor_card(sensor, chart_data=None) %}
-<div class="col-md-4 col-sm-6 mb-4">
-  <div class="card sensor-card h-100">
-    <div class="card-body">
-      <h5 class="card-title">
+{% macro render_sensor_card(sensor, chart_data, alert={}) %}
+<div class="card sensor-card h-100 shadow-sm"
+     data-temp-min="{{ alert.temp_min|default('') }}"
+     data-temp-max="{{ alert.temp_max|default('') }}"
+     data-hum-min="{{ alert.humidity_min|default('') }}"
+     data-hum-max="{{ alert.humidity_max|default('') }}"
+     id="sensor-{{ sensor.mac }}">
+  <div class="card-body d-flex flex-column gap-3 pb-2">
+    <!-- Header: Nome, MAC, Última leitura -->
+    <div class="sensor-header-row">
+      <h5 class="card-title mb-0 flex-grow-1">
         <span class="editable" data-mac="{{ sensor.mac }}">{{ sensor.name or "Unnamed Sensor" }}</span>
       </h5>
-      <h6 class="card-subtitle mb-2 text-muted">{{ sensor.mac }}</h6>
-      <p class="card-text"><strong>Last Reading:</strong> {{ sensor.last_read or "N/A" }}</p>
-
-      {% if chart_data %}
-      {% set temps = chart_data | map(attribute='avg_temp') | select('defined') | list %}
-      {% set hums = chart_data | map(attribute='avg_hum') | select('defined') | list %}
-      <div class="mb-2 small">
-        <strong>Avg Temp:</strong> {{ temps|sum / temps|length if temps else "–" }} °C |
-        <strong>Avg Hum:</strong> {{ hums|sum / hums|length if hums else "–" }} %
-      </div>
-      <div class="mini-chart-container" style="height:100px;">
-        <canvas id="chart-{{ sensor.mac }}"></canvas>
-      </div>
-      {% endif %}
+      <span class="sensor-mac">{{ sensor.mac }}</span>
+      <span class="sensor-last-read">
+        <span class="d-none d-md-inline"><strong>Última:</strong></span>
+        {{ sensor.last_read or 'N/A' }}
+      </span>
     </div>
-    <div class="card-footer bg-transparent border-top-0">
-      <div class="btn-group w-100" role="group">
-        <button class="btn btn-primary btn-sm export-sensor" data-mac="{{ sensor.mac }}">Export</button>
-        <button class="btn btn-secondary btn-sm edit-alarm" data-mac="{{ sensor.mac }}">Alarm</button>
-        <button class="btn btn-secondary btn-sm edit-schedule" data-mac="{{ sensor.mac }}">Schedule</button>
+    <!-- Stats -->
+    <div class="sensor-stats-row">
+      <div>
+        <strong>Avg Temp:</strong> {{ sensor.avg_temp if sensor.avg_temp is not none else '–' }} °C |
+        <strong>Avg Hum:</strong> {{ sensor.avg_hum if sensor.avg_hum is not none else '–' }} %
+      </div>
+      <div>
+        <strong>Limites:</strong> {{ alert.temp_min|default('–') }}~{{ alert.temp_max|default('–') }}°C |
+        {{ alert.humidity_min|default('–') }}~{{ alert.humidity_max|default('–') }}%
       </div>
     </div>
+    <!-- Mini Chart -->
+    <div class="mini-chart-container">
+      <canvas id="chart-{{ sensor.mac }}"></canvas>
+    </div>
+    <!-- Alarm Form -->
+    <form class="alarm-form mt-2" data-mac="{{ sensor.mac }}">
+      <div class="row g-1">
+        <div class="col-6 col-sm-3">
+          <input type="number" class="form-control form-control-sm"
+                 name="temp_min" step="any" placeholder="Temp. Min"
+                 value="{{ alert.temp_min if alert.temp_min is not none else '' }}">
+        </div>
+        <div class="col-6 col-sm-3">
+          <input type="number" class="form-control form-control-sm"
+                 name="temp_max" step="any" placeholder="Temp. Max"
+                 value="{{ alert.temp_max if alert.temp_max is not none else '' }}">
+        </div>
+        <div class="col-6 col-sm-3">
+          <input type="number" class="form-control form-control-sm"
+                 name="humidity_min" step="any" placeholder="Hum. Min"
+                 value="{{ alert.humidity_min if alert.humidity_min is not none else '' }}">
+        </div>
+        <div class="col-6 col-sm-3">
+          <input type="number" class="form-control form-control-sm"
+                 name="humidity_max" step="any" placeholder="Hum. Max"
+                 value="{{ alert.humidity_max if alert.humidity_max is not none else '' }}">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">Salvar</button>
+      <div class="form-feedback small mt-1"></div>
+    </form>
+  </div>
+  <div class="card-footer bg-transparent border-0 d-flex justify-content-end">
+    <button class="btn btn-primary btn-sm export-sensor" data-mac="{{ sensor.mac }}">Exportar</button>
   </div>
 </div>
 {% endmacro %}

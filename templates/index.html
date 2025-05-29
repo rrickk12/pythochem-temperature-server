@@ -1,30 +1,37 @@
-<!-- templates/index.html -->
-{% extends "base.html" %}
-{% import "partials/_sensor_card.html" as sensor_card %}
+{% extends 'base.html' %}
+{% import 'partials/_sensor_card.html' as sensor_card %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Sensores{% endblock %}
 
 {% block content %}
-<div class="py-3">
-  <h1 class="text-center">Sensor Gallery</h1>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+  <h1 class="mb-3 mb-md-0">Galeria de Sensores</h1>
+  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exportAllModal">
+    Exportar Tudo
+  </button>
 </div>
-<div class="row">
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
   {% for item in sensor_cards_data %}
-    {{ sensor_card.render_sensor_card(sensor=item.sensor, chart_data=item.chart_data) }}
+    <div class="col">
+      {{ sensor_card.render_sensor_card(
+          sensor=item.sensor,
+          chart_data=item.chart_data,
+          alert=item.alert or {}
+      ) }}
+    </div>
   {% endfor %}
 </div>
-<div class="my-4 text-end">
-  <a href="{{ url_for('view.export_all') }}" class="btn btn-success">Export All Sensor Data</a>
-</div>
 {% endblock %}
-
+<!-- Modal de Exportação -->
 {% block scripts %}
 <script>
-  window.sensorChartData = {
-    {% for item in sensor_cards_data %}
-      "{{ item.sensor.mac }}": {{ item.chart_data | tojson }}{% if not loop.last %},{% endif %}
-    {% endfor %}
-  };
+window.sensorChartData = {
+  {% for item in sensor_cards_data %}
+    "{{ item.sensor.mac }}": {{ item.chart_data|tojson }}{% if not loop.last %},{% endif %}
+  {% endfor %}
+};
 </script>
-<script src="{{ url_for('static', filename='js/mini_charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

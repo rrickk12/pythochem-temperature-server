@@ -1,0 +1,2 @@
+from db_ops.db_manager import backfill_clean_reads_all
+backfill_clean_reads_all()
