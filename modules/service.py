@@ -179,7 +179,18 @@ class SensorService:
         return buf
 
 def _aggregate_group(group, group_start):
-    # Pode customizar para outras agregações
+    """
+    Faz agregação dos dados do grupo:
+      - Média dos valores
+      - Min/max
+      - Última leitura válida
+      - Horário da última leitura
+    """
+    # Ordene o grupo pelo timestamp (garante que o último é realmente o último)
+    group_sorted = sorted(group, key=lambda g: g.timestamp)
+    last = group_sorted[-1]
+    first = group_sorted[0]
+
     return {
         "timestamp": group_start.isoformat(timespec='minutes'),
         "avg_temp": sum([g.avg_temp for g in group if g.avg_temp is not None]) / len(group),
@@ -188,6 +199,12 @@ def _aggregate_group(group, group_start):
         "max_temp": max([g.max_temp for g in group if g.max_temp is not None]),
         "min_hum": min([g.min_hum for g in group if g.min_hum is not None]),
         "max_hum": max([g.max_hum for g in group if g.max_hum is not None]),
+        "last_temp": last.avg_temp,
+        "last_hum": last.avg_hum,
+        "last_timestamp": last.timestamp,
+        "first_temp": first.avg_temp,
+        "first_hum": first.avg_hum,
+        "first_timestamp": first.timestamp,
     }
 
 # Singleton para import fácil
